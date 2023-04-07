@@ -1,3 +1,5 @@
+/* Copy and pasted with modifications from shadcn */
+
 import React from "react";
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 
