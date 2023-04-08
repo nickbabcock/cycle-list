@@ -45,6 +45,9 @@ import React, {
 import { CheckIcon } from "@/icons/CheckIcon";
 import { StoreApi, createStore, useStore, create } from "zustand";
 import { SmallTrashIcon } from "@/icons/SmallTrashIcon";
+import { GithubIcon } from "@/icons/GithubIcon";
+import { ChevronUpIcon } from "@/icons/ChevronUpIcon";
+import { nanoid } from "nanoid";
 
 function check<T>(t: T | undefined | null, msg?: string): T {
   if (t === undefined || t === null) {
@@ -119,8 +122,6 @@ const defaultData = [
   },
 ];
 
-let nextId = 10;
-
 function formatEpoch(x: number) {
   const result = new Date();
   result.setTime(x);
@@ -165,7 +166,7 @@ function Item({ item }: { item: TodoItemState }) {
     <div
       ref={setNodeRef}
       style={style}
-      className="group flex cursor-pointer items-stretch bg-pink-300  text-base font-semibold tracking-tight shadow-sm dark:bg-pink-800 sm:rounded-md"
+      className="group flex cursor-pointer items-stretch bg-pink-300 text-base font-semibold tracking-tight shadow-sm dark:bg-pink-800 sm:rounded-md"
       {...attributes}
       tabIndex={-1}
     >
@@ -180,13 +181,13 @@ function Item({ item }: { item: TodoItemState }) {
           >
             <div>{item.name}</div>
             {item.lastChecked ? (
-              <div className="text-xs italic text-black/50">
+              <div className="text-xs italic text-black/50 dark:text-slate-100/50">
                 Last checked: {formatEpoch(item.lastChecked)}
               </div>
             ) : null}
           </button>
           <button
-            className="opacity-0 focus:opacity-100 group-hover:opacity-100 peer-hover:bg-pink-400/75 peer-focus:opacity-100 peer-active:bg-pink-400 peer-active:opacity-100 peer-active:dark:bg-pink-700"
+            className="opacity-0 focus:opacity-100 group-hover:opacity-100 peer-hover:bg-pink-400/75 peer-focus:opacity-100 peer-active:bg-pink-400 peer-active:opacity-100 peer-active:dark:bg-pink-700 [@media(hover:none)]:opacity-100"
             onClick={() => actions.deleteItem(item)}
           >
             <div className="flex h-10 items-center px-4 text-black/40 hover:text-black/75">
@@ -196,12 +197,22 @@ function Item({ item }: { item: TodoItemState }) {
           </button>
 
           <button
-            className="cursor-grab peer-hover:bg-pink-400/75 peer-active:bg-pink-400 peer-active:dark:bg-pink-700 sm:rounded-r-md"
+            className="cursor-grab peer-hover:bg-pink-400/75 peer-active:bg-pink-400 peer-active:dark:bg-pink-700 sm:rounded-r-md [@media(hover:none)]:hidden"
             {...listeners}
           >
             <div className="flex h-10 items-center border-l border-l-pink-800 px-4 dark:border-l-pink-500">
               <DragIcon />
               <span className="sr-only">Drag {item.name}</span>
+            </div>
+          </button>
+
+          <button
+            className="peer-hover:bg-pink-400/75 peer-active:bg-pink-400 peer-active:dark:bg-pink-700 sm:rounded-r-md [@media(hover:hover)]:hidden"
+            onClick={() => actions.bumpItemUp(item)}
+          >
+            <div className="flex h-10 items-center border-l border-l-pink-800 px-4 dark:border-l-pink-500">
+              <ChevronUpIcon />
+              <span className="sr-only">Up {item.name}</span>
             </div>
           </button>
         </>
@@ -303,11 +314,18 @@ function DndList() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => listActions.deleteList({ id: title })}>Delete</AlertDialogAction>
+              <AlertDialogAction
+                onClick={() => listActions.deleteList({ id: title })}
+              >
+                Delete
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        <button className="cursor-grab touch-none" {...listeners}>
+        <button
+          className="cursor-grab touch-none [@media(hover:none)]:hidden"
+          {...listeners}
+        >
           <div className="">
             <DragIcon />
             <span className="sr-only">Drag {title}</span>
@@ -324,7 +342,7 @@ function DndList() {
           <SortableContext items={items} strategy={verticalListSortingStrategy}>
             <ul
               ref={animationParent}
-              className="flex flex-col items-start space-y-3"
+              className="flex flex-col items-start space-y-1 sm:space-y-3"
             >
               {items.map((item) => (
                 <li className="w-full" key={item.id}>
@@ -348,6 +366,7 @@ type ListState = {
     deleteItem: (item: { id: string }) => void;
     completeItem: (item: { id: string }) => void;
     moveItem: (from: { id: string }, to: { id: string }) => void;
+    bumpItemUp: (item: { id: string }) => void;
   };
 };
 
@@ -363,10 +382,10 @@ function createListStore(list: TodoList) {
     items: initialItems,
     actions: {
       addItem() {
-        set({ items: [{ kind: "new", id: `${nextId}` }, ...get().items] });
+        set({ items: [{ kind: "new", id: nanoid() }, ...get().items] });
       },
 
-      addItemConfirm(value: string) {
+      addItemConfirm(value) {
         if (!value) {
           set({ items: get().items.slice(1) });
         } else {
@@ -393,7 +412,7 @@ function createListStore(list: TodoList) {
         updateMainStore();
       },
 
-      completeItem(item: { id: string }) {
+      completeItem(item) {
         const items = get().items;
         const oldIndex = items.findIndex((x) => x.id == item.id);
         const newItem = check(items.splice(oldIndex, 1)[0], "unable to splice");
@@ -413,11 +432,18 @@ function createListStore(list: TodoList) {
         updateMainStore();
       },
 
-      moveItem(from: { id: string }, to: { id: string }) {
+      moveItem(from, to) {
         const items = get().items;
         const oldIndex = items.findIndex((item) => item.id == from.id);
         const newIndex = items.findIndex((item) => item.id == to.id);
         set({ items: arrayMove(items, oldIndex, newIndex) });
+        updateMainStore();
+      },
+
+      bumpItemUp(item) {
+        const items = get().items;
+        const oldIndex = items.findIndex((x) => x.id == item.id);
+        set({ items: arrayMove(items, oldIndex, Math.max(oldIndex - 1, 0)) });
         updateMainStore();
       },
     },
@@ -426,9 +452,14 @@ function createListStore(list: TodoList) {
   const updateMainStore = () => {
     useCyclelistStore.getState().actions.updateList({
       title: store.getState().title,
-      items: store.getState().items.filter((x): x is Extract<TodoItemState, { kind: "existing" }> => x.kind === "existing"),
-    })
-  }
+      items: store
+        .getState()
+        .items.filter(
+          (x): x is Extract<TodoItemState, { kind: "existing" }> =>
+            x.kind === "existing"
+        ),
+    });
+  };
 
   return store;
 }
@@ -662,9 +693,17 @@ export default function Home() {
         ref={animationParent}
       >
         <div className="p-4 sm:p-0">
-          <h1 className="whitespace-nowrap text-4xl font-extrabold tracking-tight sm:text-6xl">
-            Cycle • List
-          </h1>
+          <div className="flex items-center">
+            <h1 className="grow whitespace-nowrap text-4xl font-extrabold tracking-tight sm:text-6xl">
+              Cycle • List
+            </h1>
+            <a
+              className="block w-8"
+              href="https://github.com/nickbabcock/cycle-list"
+            >
+              <GithubIcon alt="Cycle List Github Repo" />
+            </a>
+          </div>
           <p className="mt-4 text-xl">
             {"Keeping track of life's cyclical activities"}
           </p>
