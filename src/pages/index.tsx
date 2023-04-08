@@ -669,14 +669,14 @@ export default function Home() {
 
         <meta
           name="description"
-          content="Cycle List is a cyclical activity tracker, useful for highlighting least recently eaten dinners, workouts, cleaning, etc."
+          content="CycleList is a cyclical activity tracker, useful for highlighting least recently eaten dinners, workouts, cleaning, etc."
         />
         <meta
           property="og:description"
-          content="Cycle List is a cyclical activity tracker, useful for highlighting least recently eaten dinners, workouts, cleaning, etc."
+          content="CycleList is a cyclical activity tracker, useful for highlighting least recently eaten dinners, workouts, cleaning, etc."
         />
 
-        <meta property="og:title" content="Cyclelist" />
+        <meta property="og:title" content="CycleList" />
         <meta property="og:site_name" content="Cycle • List" />
         <meta property="og:type" content="website" />
         <meta
@@ -701,7 +701,7 @@ export default function Home() {
               className="block w-8"
               href="https://github.com/nickbabcock/cycle-list"
             >
-              <GithubIcon alt="Cycle List Github Repo" />
+              <GithubIcon alt="CycleList Github Repo" />
             </a>
           </div>
           <p className="mt-4 text-xl">
