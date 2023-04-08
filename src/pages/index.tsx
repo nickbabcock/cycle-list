@@ -730,10 +730,15 @@ export default function Home() {
             {"Keeping track of life's cyclical activities"}
           </p>
           {isFirstTime ? (
-            <p className="mt-4 text-xl">
-              Try selecting an item to cause it to fall to the bottom of the
-              list!
-            </p>
+            <>
+              <p className="mt-4 text-xl">
+                Try selecting an item to cause it to fall to the bottom of the
+                list!
+              </p>
+              <p className="mt-4 text-xl">
+                Your lists are stored locally in the browser
+              </p>
+            </>
           ) : null}
 
           <NewListInput />
