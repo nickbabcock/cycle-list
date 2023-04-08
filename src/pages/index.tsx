@@ -534,7 +534,8 @@ type CyclelistState = {
   lists: TodoList[];
 
   actions: {
-    readFromStorage: () => void;
+    readFromStorage: () => string | null;
+    loadFromStorage: () => void;
     saveToStorage: () => void;
     addList: (title: string) => "accepted" | "denied";
     deleteList: (list: { id: string }) => void;
@@ -548,7 +549,16 @@ const useCyclelistStore = create<CyclelistState>()((set, get) => ({
   actions: {
     readFromStorage() {
       try {
-        const stored = localStorage.getItem("lists");
+        return localStorage.getItem("lists");
+      } catch (ex) {
+        console.error(ex);
+        return null;
+      }
+    },
+
+    loadFromStorage() {
+      try {
+        const stored = get().actions.readFromStorage();
         const lists = stored !== null ? JSON.parse(stored) : defaultData;
         set({ lists });
       } catch (ex) {
@@ -609,7 +619,7 @@ function useLists() {
   const { lists, actions } = useCyclelistStore();
 
   useEffect(() => {
-    actions.readFromStorage();
+    actions.loadFromStorage();
   }, [actions]);
 
   return lists;
@@ -655,8 +665,20 @@ function NewListInput() {
   );
 }
 
+function useIsFirstTime() {
+  const actions = useListsActions();
+  const [isFirstTime, setIsFirstTime] = useState(false);
+
+  useEffect(() => {
+    setIsFirstTime(actions.readFromStorage() == null);
+  }, []);
+
+  return isFirstTime;
+}
+
 export default function Home() {
   const data = useLists();
+  const isFirstTime = useIsFirstTime();
   const [animationParent] = useAutoAnimate();
 
   return (
@@ -692,7 +714,7 @@ export default function Home() {
         className="grid grid-cols-[repeat(auto-fill,_minmax(360px,_auto))] gap-12 sm:p-6 md:p-8 lg:p-10 xl:p-12"
         ref={animationParent}
       >
-        <div className="p-4 sm:p-0">
+        <div className="max-w-md p-4 sm:p-0">
           <div className="flex items-center">
             <h1 className="grow whitespace-nowrap text-4xl font-extrabold tracking-tight sm:text-6xl">
               Cycle • List
@@ -707,6 +729,12 @@ export default function Home() {
           <p className="mt-4 text-xl">
             {"Keeping track of life's cyclical activities"}
           </p>
+          {isFirstTime ? (
+            <p className="mt-4 text-xl">
+              Try selecting an item to cause it to fall to the bottom of the
+              list!
+            </p>
+          ) : null}
 
           <NewListInput />
         </div>
