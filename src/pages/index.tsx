@@ -1,3 +1,4 @@
+/* OMG everything in one file, what if someone sees this? */
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,13 +37,13 @@ import React, {
   useCallback,
   useContext,
   useMemo,
-  useRef,
   KeyboardEvent,
   useState,
+  useEffect,
+  useRef,
 } from "react";
 import { CheckIcon } from "@/icons/CheckIcon";
-import { StoreApi, createStore, useStore } from "zustand";
-import { PencilIcon } from "@/icons/PencilIcon";
+import { StoreApi, createStore, useStore, create } from "zustand";
 import { SmallTrashIcon } from "@/icons/SmallTrashIcon";
 
 function check<T>(t: T | undefined | null, msg?: string): T {
@@ -62,6 +63,31 @@ function keyboardTrigger(cb: () => void) {
 }
 
 const defaultData = [
+  {
+    title: "Game Night",
+    items: [
+      {
+        id: "20",
+        name: "7 Wonders",
+      },
+      {
+        id: "21",
+        name: "Space Base",
+      },
+      {
+        id: "22",
+        name: "Kingdom Builder",
+      },
+      {
+        id: "23",
+        name: "Azul",
+      },
+      {
+        id: "24",
+        name: "Catan",
+      },
+    ],
+  },
   {
     title: "Goto Dinners",
     items: [
@@ -91,38 +117,20 @@ const defaultData = [
       },
     ],
   },
-  {
-    title: "Game Night",
-    items: [
-      {
-        id: "20",
-        name: "7 Wonders",
-      },
-      {
-        id: "21",
-        name: "Space Base",
-      },
-      {
-        id: "22",
-        name: "Kingdom Builder",
-      },
-      {
-        id: "23",
-        name: "Azul",
-      },
-      {
-        id: "24",
-        name: "Catan",
-      },
-    ],
-  },
 ];
 
 let nextId = 10;
 
+function formatEpoch(x: number) {
+  const result = new Date();
+  result.setTime(x);
+  return result.toLocaleDateString();
+}
+
 type TodoItem = {
   name: string;
   id: string;
+  lastChecked?: number;
 };
 
 type TodoList = {
@@ -152,26 +160,33 @@ function Item({ item }: { item: TodoItemState }) {
     transform: CSS.Transform.toString(transform),
     transition,
   };
-  // className="w-full flex items-center cursor-pointer rounded-md bg-pink-300 px-4 py-4 text-base font-semibold tracking-tight shadow-sm hover:bg-pink-300/75 focus:outline focus:outline-2 focus:outline-pink-400 focus-visible:outline-2 focus-visible:outline-offset-2 active:bg-pink-400 dark:bg-pink-800 dark:active:bg-pink-700"
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="group flex cursor-pointer items-stretch rounded-md  bg-pink-300 text-base font-semibold tracking-tight shadow-sm dark:bg-pink-800"
+      className="group flex cursor-pointer items-stretch bg-pink-300  text-base font-semibold tracking-tight shadow-sm dark:bg-pink-800 sm:rounded-md"
       {...attributes}
       tabIndex={-1}
     >
       {item.kind == "existing" ? (
         <>
           <button
-            className="peer grow rounded-l-md px-4 py-4 text-left hover:bg-pink-400/75 active:bg-pink-400 dark:active:bg-pink-700"
-            onClick={() => actions.completeItem(item)}
+            className="peer grow px-4 py-4 text-left hover:bg-pink-400/75 active:bg-pink-400 dark:active:bg-pink-700 sm:rounded-l-md"
+            onClick={(e) => {
+              actions.completeItem(item);
+              e.currentTarget.blur();
+            }}
           >
-            {item.name}
+            <div>{item.name}</div>
+            {item.lastChecked ? (
+              <div className="text-xs italic text-black/50">
+                Last checked: {formatEpoch(item.lastChecked)}
+              </div>
+            ) : null}
           </button>
           <button
-            className="opacity-0 focus:opacity-100 group-hover:opacity-100 peer-hover:bg-pink-400/75 peer-focus:opacity-100 peer-active:bg-pink-400 peer-active:dark:bg-pink-700"
+            className="opacity-0 focus:opacity-100 group-hover:opacity-100 peer-hover:bg-pink-400/75 peer-focus:opacity-100 peer-active:bg-pink-400 peer-active:opacity-100 peer-active:dark:bg-pink-700"
             onClick={() => actions.deleteItem(item)}
           >
             <div className="flex h-10 items-center px-4 text-black/40 hover:text-black/75">
@@ -181,7 +196,7 @@ function Item({ item }: { item: TodoItemState }) {
           </button>
 
           <button
-            className="cursor-grab rounded-r-md peer-hover:bg-pink-400/75 peer-active:bg-pink-400 peer-active:dark:bg-pink-700"
+            className="cursor-grab peer-hover:bg-pink-400/75 peer-active:bg-pink-400 peer-active:dark:bg-pink-700 sm:rounded-r-md"
             {...listeners}
           >
             <div className="flex h-10 items-center border-l border-l-pink-800 px-4 dark:border-l-pink-500">
@@ -222,7 +237,8 @@ function Item({ item }: { item: TodoItemState }) {
 function DndList() {
   const title = useListTitle();
   const items = useListItems();
-  const actions = useListActions();
+  const itemActions = useListActions();
+  const listActions = useListsActions();
   const isAddingItem = useIsAddingItem();
 
   const { listeners, setNodeRef, transform, transition } = useSortable({
@@ -247,7 +263,7 @@ function DndList() {
       active.id !== over.id
     ) {
       enableAnimations(false);
-      actions.moveItem({ id: active.id }, { id: over.id });
+      itemActions.moveItem({ id: active.id }, { id: over.id });
       setTimeout(() => enableAnimations(true), 0);
     }
   }
@@ -260,10 +276,10 @@ function DndList() {
   return (
     <div
       ref={setNodeRef}
-      className="flex w-full max-w-md flex-col space-y-4"
+      className="flex w-full flex-col space-y-4"
       style={style}
     >
-      <div className="flex items-center space-x-6">
+      <div className="flex items-center space-x-6 px-4 sm:px-0">
         <h2 className="grow text-2xl font-bold tracking-tight text-gray-800/75 dark:text-gray-300/75">
           {title}
         </h2>
@@ -271,14 +287,10 @@ function DndList() {
           className={`hover:text-pink-300/75 focus:text-pink-300/75 active:text-pink-400 ${
             isAddingItem ? "hidden" : ""
           }`}
-          onClick={actions.addItem}
+          onClick={itemActions.addItem}
         >
           <PlusIcon />
           <span className="sr-only">Add item to {title}</span>
-        </button>
-        <button className="hover:text-pink-300/75 focus:text-pink-300/75 active:text-pink-400">
-          <PencilIcon />
-          <span className="sr-only">Edit {title}</span>
         </button>
         <AlertDialog>
           <AlertDialogTrigger className="hover:text-pink-300/75 focus:text-pink-300/75 active:text-pink-400">
@@ -291,11 +303,11 @@ function DndList() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction>Delete</AlertDialogAction>
+              <AlertDialogAction onClick={() => listActions.deleteList({ id: title })}>Delete</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        <button className="cursor-grab" {...listeners}>
+        <button className="cursor-grab touch-none" {...listeners}>
           <div className="">
             <DragIcon />
             <span className="sr-only">Drag {title}</span>
@@ -334,7 +346,6 @@ type ListState = {
     addItem: () => void;
     addItemConfirm: (value: string) => void;
     deleteItem: (item: { id: string }) => void;
-    deleteList: () => void;
     completeItem: (item: { id: string }) => void;
     moveItem: (from: { id: string }, to: { id: string }) => void;
   };
@@ -346,6 +357,7 @@ function createListStore(list: TodoList) {
   const initialItems = list.items.map(
     (x) => ({ ...x, kind: "existing" } as const)
   );
+
   const store = createStore<ListState>()((set, get) => ({
     title: list.title,
     items: initialItems,
@@ -369,6 +381,7 @@ function createListStore(list: TodoList) {
               ...get().items.slice(1),
             ],
           });
+          updateMainStore();
         }
       },
 
@@ -377,12 +390,27 @@ function createListStore(list: TodoList) {
         const index = items.findIndex((x) => x.id == item.id);
         items.splice(index, 1);
         set({ items });
+        updateMainStore();
       },
 
       completeItem(item: { id: string }) {
         const items = get().items;
         const oldIndex = items.findIndex((x) => x.id == item.id);
-        set({ items: arrayMove(items, oldIndex, items.length - 1) });
+        const newItem = check(items.splice(oldIndex, 1)[0], "unable to splice");
+        if (newItem.kind !== "existing") {
+          throw new Error("able to complete only existing items");
+        }
+
+        set({
+          items: [
+            ...items,
+            {
+              ...newItem,
+              lastChecked: +new Date(),
+            },
+          ],
+        });
+        updateMainStore();
       },
 
       moveItem(from: { id: string }, to: { id: string }) {
@@ -390,11 +418,17 @@ function createListStore(list: TodoList) {
         const oldIndex = items.findIndex((item) => item.id == from.id);
         const newIndex = items.findIndex((item) => item.id == to.id);
         set({ items: arrayMove(items, oldIndex, newIndex) });
+        updateMainStore();
       },
-
-      deleteList() {},
     },
   }));
+
+  const updateMainStore = () => {
+    useCyclelistStore.getState().actions.updateList({
+      title: store.getState().title,
+      items: store.getState().items.filter((x): x is Extract<TodoItemState, { kind: "existing" }> => x.kind === "existing"),
+    })
+  }
 
   return store;
 }
@@ -424,7 +458,7 @@ function ListProvider({
 }
 
 function CycleLists({ data }: { data: TodoList[] }) {
-  const [animationParent] = useAutoAnimate();
+  const actions = useListsActions();
   const items = useMemo(() => data.map((x) => ({ ...x, id: x.title })), [data]);
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -442,12 +476,12 @@ function CycleLists({ data }: { data: TodoList[] }) {
       typeof over.id === "string" &&
       active.id !== over.id
     ) {
-      // actions.moveItem({ id: active.id }, { id: over.id });
+      actions.moveList({ id: active.id }, { id: over.id });
     }
   }
 
   return (
-    <div ref={animationParent} className="flex flex-wrap gap-12">
+    <>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -461,77 +495,183 @@ function CycleLists({ data }: { data: TodoList[] }) {
           ))}
         </SortableContext>
       </DndContext>
+    </>
+  );
+}
+
+type CyclelistState = {
+  lists: TodoList[];
+
+  actions: {
+    readFromStorage: () => void;
+    saveToStorage: () => void;
+    addList: (title: string) => "accepted" | "denied";
+    deleteList: (list: { id: string }) => void;
+    moveList: (from: { id: string }, to: { id: string }) => void;
+    updateList: (list: TodoList) => void;
+  };
+};
+
+const useCyclelistStore = create<CyclelistState>()((set, get) => ({
+  lists: [],
+  actions: {
+    readFromStorage() {
+      try {
+        const stored = localStorage.getItem("lists");
+        const lists = stored !== null ? JSON.parse(stored) : defaultData;
+        set({ lists });
+      } catch (ex) {
+        console.error(ex);
+      }
+    },
+
+    saveToStorage() {
+      try {
+        localStorage.setItem("lists", JSON.stringify(get().lists));
+      } catch (ex) {
+        console.error(ex);
+      }
+    },
+
+    addList(title: string) {
+      if (!title) {
+        return "denied";
+      }
+
+      const lists = get().lists;
+      if (lists.findIndex((x) => x.title == title) !== -1) {
+        return "denied";
+      }
+
+      set({ lists: [{ title, items: [] }, ...lists] });
+      get().actions.saveToStorage();
+      return "accepted";
+    },
+
+    moveList(from: { id: string }, to: { id: string }) {
+      const lists = get().lists;
+      const oldIndex = lists.findIndex((list) => list.title == from.id);
+      const newIndex = lists.findIndex((list) => list.title == to.id);
+      set({ lists: arrayMove(lists, oldIndex, newIndex) });
+      get().actions.saveToStorage();
+    },
+
+    deleteList(list: { id: string }) {
+      const lists = get().lists.slice();
+      const oldIndex = lists.findIndex((x) => x.title == list.id);
+      lists.splice(oldIndex, 1);
+      set({ lists });
+      get().actions.saveToStorage();
+    },
+
+    updateList(list: TodoList) {
+      const lists = get().lists.slice();
+      const index = lists.findIndex((x) => x.title == list.title);
+      lists[index] = list;
+      set({ lists });
+      get().actions.saveToStorage();
+    },
+  },
+}));
+
+function useLists() {
+  const { lists, actions } = useCyclelistStore();
+
+  useEffect(() => {
+    actions.readFromStorage();
+  }, [actions]);
+
+  return lists;
+}
+
+const useListsActions = () => useCyclelistStore((x) => x.actions);
+
+function NewListInput() {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const actions = useListsActions();
+
+  function addNewList() {
+    if (inputRef.current !== null) {
+      const result = actions.addList(inputRef.current.value);
+      console.log(result);
+      if (result === "accepted") {
+        inputRef.current.value = "";
+      }
+    }
+  }
+
+  return (
+    <div className="mt-8 flex gap-2">
+      <label htmlFor="add-new-list-input" className="sr-only">
+        Add a new list
+      </label>
+      <input
+        ref={inputRef}
+        id="add-new-list-input"
+        className="peer w-[264px] border-b border-b-orange-200 bg-transparent text-2xl font-bold tracking-tight placeholder:text-orange-300 focus:outline-none"
+        placeholder="Add a new list"
+        onBlur={addNewList}
+        onKeyDown={keyboardTrigger(addNewList)}
+      />
+      <button
+        className="opacity-0 transition-opacity hover:text-pink-300/75 focus:text-pink-300/75 focus:opacity-100 active:text-pink-400 peer-focus:opacity-100"
+        onClick={() => addNewList()}
+      >
+        <PlusIcon />
+        <span className="sr-only">Add list</span>
+      </button>
     </div>
   );
 }
 
 export default function Home() {
-  const [data, setData] = useState(defaultData);
-
-  const addNewList = () => {
-    const input = document.querySelector<HTMLInputElement>(
-      "#add-new-list-input"
-    );
-    if (!input) {
-      throw new Error("missing input");
-    }
-
-    if (!input.value) {
-      return;
-    }
-
-    if (data.findIndex((x) => x.title == input.value) !== -1) {
-      return;
-    }
-
-    setData([{ title: input.value, items: [] }, ...data]);
-    input.value = "";
-  };
+  const data = useLists();
+  const [animationParent] = useAutoAnimate();
 
   return (
     <>
       <Head>
         <title>Cycle • List</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="color-scheme" content="dark light" />
+        <link rel="icon" href="/favicon.ico" />
+
         <meta
           name="description"
           content="Cycle List is a cyclical activity tracker, useful for highlighting least recently eaten dinners, workouts, cleaning, etc."
         />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
+        <meta
+          property="og:description"
+          content="Cycle List is a cyclical activity tracker, useful for highlighting least recently eaten dinners, workouts, cleaning, etc."
+        />
+
+        <meta property="og:title" content="Cyclelist" />
+        <meta property="og:site_name" content="Cycle • List" />
+        <meta property="og:type" content="website" />
+        <meta
+          property="og:image"
+          content="https://cyclelist.nickb.dev/og.png"
+        />
+        <meta property="og:image:width" content="2532" />
+        <meta property="og:image:height" content="1318" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta property="og:url" content="https://cyclelist.nickb.dev" />
       </Head>
-      <main className="p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12">
-        <div className="mb-8 flex flex-col space-y-4">
-          <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl">
+      <main
+        className="grid grid-cols-[repeat(auto-fill,_minmax(360px,_auto))] gap-12 sm:p-6 md:p-8 lg:p-10 xl:p-12"
+        ref={animationParent}
+      >
+        <div className="p-4 sm:p-0">
+          <h1 className="whitespace-nowrap text-4xl font-extrabold tracking-tight sm:text-6xl">
             Cycle • List
           </h1>
-          <p className="text-xl">
+          <p className="mt-4 text-xl">
             {"Keeping track of life's cyclical activities"}
           </p>
+
+          <NewListInput />
         </div>
-        <div className="flex flex-col items-start gap-12 lg:grid">
-          <div className="flex gap-2">
-            <label htmlFor="add-new-list-input" className="sr-only">
-              Add a new list
-            </label>
-            <input
-              id="add-new-list-input"
-              className="peer w-[264px] border-b bg-transparent text-2xl font-bold tracking-tight focus:outline-none"
-              placeholder="Add a new list"
-              onBlur={addNewList}
-              onKeyDown={keyboardTrigger(addNewList)}
-            />
-            <button
-              className="opacity-0 transition-opacity hover:text-pink-300/75 focus:text-pink-300/75 focus:opacity-100 active:text-pink-400 peer-focus:opacity-100"
-              onClick={() => {
-                addNewList();
-              }}
-            >
-              <PlusIcon />
-              <span className="sr-only">Add list</span>
-            </button>
-          </div>
-          <CycleLists data={data} />
-        </div>
+        <CycleLists data={data} />
       </main>
     </>
   );
