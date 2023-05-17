@@ -671,7 +671,7 @@ function useIsFirstTime() {
 
   useEffect(() => {
     setIsFirstTime(actions.readFromStorage() == null);
-  }, []);
+  }, [actions]);
 
   return isFirstTime;
 }
