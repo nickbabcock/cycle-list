@@ -149,7 +149,7 @@ type TodoItemState =
 function Item({ item }: { item: TodoItemState }) {
   const newInputRef = useCallback(
     (input: HTMLInputElement) => input?.focus(),
-    []
+    [],
   );
 
   const actions = useListActions();
@@ -224,7 +224,7 @@ function Item({ item }: { item: TodoItemState }) {
             onBlur={(e) => actions.addItemConfirm(e.currentTarget.value)}
             onKeyDown={(e) =>
               keyboardTrigger(() =>
-                actions.addItemConfirm(e.currentTarget.value)
+                actions.addItemConfirm(e.currentTarget.value),
               )(e)
             }
           />
@@ -261,7 +261,7 @@ function DndList() {
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   function handleDragEnd(event: DragEndEvent) {
@@ -374,7 +374,7 @@ type ListStore = StoreApi<ListState>;
 const ListContext = createContext<ListStore | null>(null);
 function createListStore(list: TodoList) {
   const initialItems = list.items.map(
-    (x) => ({ ...x, kind: "existing" } as const)
+    (x) => ({ ...x, kind: "existing" }) as const,
   );
 
   const store = createStore<ListState>()((set, get) => ({
@@ -456,7 +456,7 @@ function createListStore(list: TodoList) {
         .getState()
         .items.filter(
           (x): x is Extract<TodoItemState, { kind: "existing" }> =>
-            x.kind === "existing"
+            x.kind === "existing",
         ),
     });
   };
@@ -470,7 +470,7 @@ function useListContext() {
 
 function useListStore<T>(
   selector: (state: ListState) => T,
-  equalityFn?: (left: T, right: T) => boolean
+  equalityFn?: (left: T, right: T) => boolean,
 ): T {
   return useStore(useListContext(), selector, equalityFn);
 }
@@ -495,7 +495,7 @@ function CycleLists({ data }: { data: TodoList[] }) {
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   function handleDragEnd(event: DragEndEvent) {
