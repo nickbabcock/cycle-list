@@ -8,7 +8,6 @@ export const AlertDialog = AlertDialogPrimitive.Root;
 export const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
 
 const AlertDialogPortal = ({
-  className,
   children,
   ...props
 }: AlertDialogPrimitive.AlertDialogPortalProps) => (
