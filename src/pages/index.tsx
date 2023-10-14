@@ -48,6 +48,8 @@ import { SmallTrashIcon } from "@/icons/SmallTrashIcon";
 import { GithubIcon } from "@/icons/GithubIcon";
 import { ChevronUpIcon } from "@/icons/ChevronUpIcon";
 import { nanoid } from "nanoid";
+import { Pencil } from "@/icons/Pencil";
+import { Dialog } from "@/components/Dialog";
 
 function check<T>(t: T | undefined | null, msg?: string): T {
   if (t === undefined || t === null) {
@@ -153,6 +155,8 @@ function Item({ item }: { item: TodoItemState }) {
   );
 
   const actions = useListActions();
+  const [editOpen, setEditOpen] = useState(false);
+  const editRef = useRef<HTMLInputElement>(null);
 
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: item.id });
@@ -186,6 +190,51 @@ function Item({ item }: { item: TodoItemState }) {
               </div>
             ) : null}
           </button>
+
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <Dialog.Trigger asChild>
+              <button className="opacity-0 focus:opacity-100 group-hover:opacity-100 peer-hover:bg-pink-400/75 peer-focus:opacity-100 peer-active:bg-pink-400 peer-active:opacity-100 peer-active:dark:bg-pink-700 [@media(hover:none)]:opacity-100">
+                <div className="flex h-10 items-center px-4 text-black/40 hover:text-black/75">
+                  <Pencil />
+                  <span className="sr-only">Edit {item.name}</span>
+                </div>
+              </button>
+            </Dialog.Trigger>
+
+            <Dialog.Portal>
+              <Dialog.Overlay className="bg-black/50" />
+              <Dialog.Content>
+                <Dialog.Title>Edit {item.name}</Dialog.Title>
+                <form
+                  className="contents"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    actions.editItem(item, e.currentTarget["newName"].value);
+                    setEditOpen(false);
+                  }}
+                >
+                  <input
+                    autoFocus
+                    name="newName"
+                    ref={editRef}
+                    className="mx-4 my-4 grow border-b border-pink-800 bg-transparent focus:outline-none dark:border-pink-500"
+                    defaultValue={item.name}
+                    aria-label="New value"
+                  />
+                  <div className="space-x-6 text-right">
+                    <Dialog.Close>Cancel</Dialog.Close>
+                    <button
+                      className="inline-flex h-10 items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 dark:focus:ring-slate-400 dark:focus:ring-offset-slate-900"
+                      type="submit"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </form>
+              </Dialog.Content>
+            </Dialog.Portal>
+          </Dialog>
+
           <button
             className="opacity-0 focus:opacity-100 group-hover:opacity-100 peer-hover:bg-pink-400/75 peer-focus:opacity-100 peer-active:bg-pink-400 peer-active:opacity-100 peer-active:dark:bg-pink-700 [@media(hover:none)]:opacity-100"
             onClick={() => actions.deleteItem(item)}
@@ -367,6 +416,7 @@ type ListState = {
     completeItem: (item: { id: string }) => void;
     moveItem: (from: { id: string }, to: { id: string }) => void;
     bumpItemUp: (item: { id: string }) => void;
+    editItem: (item: { id: string }, newName: string) => void;
   };
 };
 
@@ -428,6 +478,26 @@ function createListStore(list: TodoList) {
               lastChecked: +new Date(),
             },
           ],
+        });
+        updateMainStore();
+      },
+
+      editItem(item, newName) {
+        const items = get().items;
+        const index = items.findIndex((x) => x.id == item.id);
+        const newItems = items.slice();
+        const oldItem = items[index];
+        if (oldItem?.kind !== "existing") {
+          return;
+        }
+
+        newItems[index] = {
+          ...oldItem,
+          name: newName,
+        };
+
+        set({
+          items: newItems,
         });
         updateMainStore();
       },
