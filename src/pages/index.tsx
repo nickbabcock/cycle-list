@@ -1,14 +1,5 @@
 /* OMG everything in one file, what if someone sees this? */
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/alert-dialog";
+import { AlertDialog } from "@/components/AlertDialog";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { DragIcon } from "@/icons/DragIcon";
 import { PlusIcon } from "@/icons/PlusIcon";
@@ -353,23 +344,23 @@ function DndList() {
           <span className="sr-only">Add item to {title}</span>
         </button>
         <AlertDialog>
-          <AlertDialogTrigger className="hover:text-pink-300/75 focus:text-pink-300/75 active:text-pink-400">
+          <AlertDialog.Trigger className="hover:text-pink-300/75 focus:text-pink-300/75 active:text-pink-400">
             <TrashIcon />
             <span className="sr-only">Delete {title}</span>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete {title}?</AlertDialogTitle>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
+          </AlertDialog.Trigger>
+          <AlertDialog.Content>
+            <AlertDialog.Header>
+              <AlertDialog.Title>Delete {title}?</AlertDialog.Title>
+            </AlertDialog.Header>
+            <AlertDialog.Footer>
+              <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+              <AlertDialog.Action
                 onClick={() => listActions.deleteList({ id: title })}
               >
                 Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
+              </AlertDialog.Action>
+            </AlertDialog.Footer>
+          </AlertDialog.Content>
         </AlertDialog>
         <button
           className="cursor-grab touch-none [@media(hover:none)]:hidden"
