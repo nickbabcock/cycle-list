@@ -1,6 +1,5 @@
 /* OMG everything in one file, what if someone sees this? */
 import { AlertDialog } from "@/components/AlertDialog";
-import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { DragIcon } from "@/icons/DragIcon";
 import { PlusIcon } from "@/icons/PlusIcon";
 import { TrashIcon } from "@/icons/TrashIcon";
@@ -296,7 +295,6 @@ function DndList() {
     id: title,
   });
 
-  const [animationParent, enableAnimations] = useAutoAnimate();
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -313,9 +311,7 @@ function DndList() {
       typeof over.id === "string" &&
       active.id !== over.id
     ) {
-      enableAnimations(false);
       itemActions.moveItem({ id: active.id }, { id: over.id });
-      setTimeout(() => enableAnimations(true), 0);
     }
   }
 
@@ -380,10 +376,7 @@ function DndList() {
           onDragEnd={handleDragEnd}
         >
           <SortableContext items={items} strategy={verticalListSortingStrategy}>
-            <ul
-              ref={animationParent}
-              className="flex flex-col items-start space-y-1 sm:space-y-3"
-            >
+            <ul className="flex flex-col items-start space-y-1 sm:space-y-3">
               {items.map((item) => (
                 <li className="w-full" key={item.id}>
                   <Item item={item} />
@@ -740,7 +733,6 @@ function useIsFirstTime() {
 export default function Home() {
   const data = useLists();
   const isFirstTime = useIsFirstTime();
-  const [animationParent] = useAutoAnimate();
 
   return (
     <>
@@ -771,10 +763,7 @@ export default function Home() {
         <meta name="twitter:card" content="summary_large_image" />
         <meta property="og:url" content="https://cyclelist.nickb.dev" />
       </Head>
-      <main
-        className="grid grid-cols-[repeat(auto-fill,_minmax(360px,_auto))] gap-12 sm:p-6 md:p-8 lg:p-10 xl:p-12"
-        ref={animationParent}
-      >
+      <main className="grid grid-cols-[repeat(auto-fill,_minmax(360px,_auto))] gap-12 sm:p-6 md:p-8 lg:p-10 xl:p-12">
         <div className="max-w-md p-4 sm:p-0">
           <div className="flex items-center">
             <h1 className="grow whitespace-nowrap text-4xl font-extrabold tracking-tight sm:text-6xl">
