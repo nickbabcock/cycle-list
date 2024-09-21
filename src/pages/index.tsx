@@ -160,14 +160,14 @@ function Item({ item }: { item: TodoItemState }) {
     <div
       ref={setNodeRef}
       style={style}
-      className="group flex cursor-pointer items-stretch bg-pink-300 text-base font-semibold tracking-tight shadow-sm dark:bg-pink-800 sm:rounded-md"
+      className="group flex cursor-pointer items-stretch bg-pink-300 text-base font-semibold tracking-tight shadow-sm sm:rounded-md dark:bg-pink-800"
       {...attributes}
       tabIndex={-1}
     >
       {item.kind == "existing" ? (
         <>
           <button
-            className="peer grow px-4 py-4 text-left hover:bg-pink-400/75 active:bg-pink-400 dark:active:bg-pink-700 sm:rounded-l-md"
+            className="peer grow px-4 py-4 text-left hover:bg-pink-400/75 active:bg-pink-400 sm:rounded-l-md dark:active:bg-pink-700"
             onClick={(e) => {
               actions.completeItem(item);
               e.currentTarget.blur();
@@ -236,7 +236,7 @@ function Item({ item }: { item: TodoItemState }) {
           </button>
 
           <button
-            className="cursor-grab peer-hover:bg-pink-400/75 peer-active:bg-pink-400 peer-active:dark:bg-pink-700 sm:rounded-r-md [@media(hover:none)]:hidden"
+            className="cursor-grab peer-hover:bg-pink-400/75 peer-active:bg-pink-400 sm:rounded-r-md peer-active:dark:bg-pink-700 [@media(hover:none)]:hidden"
             {...listeners}
           >
             <div className="flex h-10 items-center border-l border-l-pink-800 px-4 dark:border-l-pink-500">
@@ -246,7 +246,7 @@ function Item({ item }: { item: TodoItemState }) {
           </button>
 
           <button
-            className="peer-hover:bg-pink-400/75 peer-active:bg-pink-400 peer-active:dark:bg-pink-700 sm:rounded-r-md [@media(hover:hover)]:hidden"
+            className="peer-hover:bg-pink-400/75 peer-active:bg-pink-400 sm:rounded-r-md peer-active:dark:bg-pink-700 [@media(hover:hover)]:hidden"
             onClick={() => actions.bumpItemUp(item)}
           >
             <div className="flex h-10 items-center border-l border-l-pink-800 px-4 dark:border-l-pink-500">
@@ -268,7 +268,7 @@ function Item({ item }: { item: TodoItemState }) {
             }
           />
           <button
-            className=" hover:text-pink-800 active:text-pink-900"
+            className="hover:text-pink-800 active:text-pink-900"
             onClick={() => {
               // no need to put anything here as the input blur event will catch
             }}
